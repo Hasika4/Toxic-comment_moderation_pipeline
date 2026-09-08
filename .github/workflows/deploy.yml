@@ -1,0 +1,47 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build Docker image
+        run: docker build -t toxic-moderation .
+
+      - name: Save Docker image
+        run: docker save toxic-moderation | gzip > toxic-moderation.tar.gz
+
+      - name: Copy image to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: toxic-moderation.tar.gz
+          target: /home/ubuntu/
+
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker load < /home/ubuntu/toxic-moderation.tar.gz
+            docker stop toxic-moderation || true
+            docker rm toxic-moderation || true
+            docker run -d \
+              --name toxic-moderation \
+              -p 8000:8000 \
+              -e GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} \
+              --restart unless-stopped \
+              toxic-moderation
+            echo "Deployment complete"
