@@ -153,26 +153,6 @@ The API key is injected as a runtime environment variable and is not included in
 
 The `routed_to` field records whether a prediction came from `xgboost`, `gemini`, or `xgboost_fallback`.
 
-## Running Locally
-
-```bash
-git clone https://github.com/Hasika4/Toxic-comment_moderation_pipeline.git
-cd Toxic-comment_moderation_pipeline
-
-export GEMINI_API_KEY="your_key"
-# Windows: setx GEMINI_API_KEY "your_key"
-
-docker build -t toxic-moderation .
-docker run -p 8000:8000 -e GEMINI_API_KEY=$GEMINI_API_KEY toxic-moderation
-```
-
-Then open `http://localhost:8000/docs`.
-
-To reproduce the analysis, download the dataset from Kaggle and run:
-
-```text
-notebooks/Toxic_detection.ipynb
-```
 
 ## Repository Structure
 
